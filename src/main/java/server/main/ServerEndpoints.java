@@ -79,8 +79,7 @@ public class ServerEndpoints {
 
 		if (serverLogic.isGameIdValid(gameID)) {
 			if (serverLogic.isPlayerIdValid(gameID, playerID)) {
-				ResponseEnvelope<GameState> response = new ResponseEnvelope<GameState>();
-				return response;
+				return new ResponseEnvelope<>(serverLogic.setUpGameState(gameID, playerID));
 			} else {
 				throw new PlayerIdException("PlayerIdException",
 						"For that game there have been already two players registrered");

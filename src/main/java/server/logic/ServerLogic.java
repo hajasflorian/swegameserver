@@ -1,11 +1,14 @@
 package server.logic;
 
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
 import MessagesBase.PlayerRegistration;
 import MessagesBase.UniquePlayerIdentifier;
+import MessagesGameState.EPlayerGameState;
 import MessagesGameState.GameState;
 import MessagesGameState.PlayerState;
 import server.exceptions.InvalidGameIdException;
@@ -65,25 +68,25 @@ public class ServerLogic {
 	}
 
 	public boolean isPlayerIdValid(String gameID, String playerID) {
-//		gameInfo.getPlayerList().contains(playerID)
-		List<Player> playerList = gameInfo.getPlayerList();
-//		if (gameInfo.getGames().containsValue(gameInfo.getPlayer(playerList, playerID))) {
-		if(gameInfo.getPlayerIdList().contains(playerID)) {
-			return true;
-		} else {
-			return false;
-		}
+		return gameInfo.getPlayerIdList().contains(playerID);
 	}
 	
-	public void setUpGameState(String gameID, String playerID) {
+	public GameState setUpGameState(String gameID, String playerID) {
 		List<Player> players = gameInfo.getGames().get(gameID);
-//		if(gameInfo.getGames().get(gameID).contains(gameInfo.getPlayer(players, playerID))) {
-//			
-//		}
+		Collection<PlayerState> playerStateCollection = new ArrayList<>();
+		for(Player player : players) {
+			if(player.isYourTurn()) {
+				PlayerState playerState = new PlayerState(player.getPlayerFirstName(), player.getPlayerLastName(), player.getPlayerStudentID(), EPlayerGameState.ShouldActNext,new UniquePlayerIdentifier(playerID), false);
+				playerStateCollection.add(playerState);
+			} else {
+				PlayerState playerState = new PlayerState(player.getPlayerFirstName(), player.getPlayerLastName(), player.getPlayerStudentID(), EPlayerGameState.ShouldWait,new UniquePlayerIdentifier(playerID), false);
+				playerStateCollection.add(playerState);
+			}
+		}
+		System.out.println(playerStateCollection.size());
 		
-//		PlayerState playerstate = new PlayerState(firstName, lastName, studentID, state, identifier, collectedTreasure)
-//		GameState gameState = new GameState(map, players, gameStateID);
-//		return gameState;
+		GameState gameState = new GameState(playerStateCollection, UUID.randomUUID().toString());
+		return gameState;
 	}
 
 }
