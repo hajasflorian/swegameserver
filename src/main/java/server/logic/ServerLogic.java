@@ -3,7 +3,9 @@ package server.logic;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import MessagesBase.PlayerRegistration;
@@ -15,10 +17,12 @@ import server.exceptions.InvalidGameIdException;
 
 public class ServerLogic {
 
-	private ServerGameInformation gameInfo = new ServerGameInformation();
-	private Player player = new Player();
+//	private ServerGameInformation gameInfo;
+	
+	private Map<String, ServerGameInformation> games = new HashMap<>();
 
-	public String newGameCreation(int len) {
+	public String createNewGame(int len) {
+		ServerGameInformation gameInfo = new ServerGameInformation();
 		final String alphaNumericContainer = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 		SecureRandom rnd = new SecureRandom();
 
@@ -27,66 +31,102 @@ public class ServerLogic {
 			strgbldr.append(alphaNumericContainer.charAt(rnd.nextInt(alphaNumericContainer.length())));
 
 		String gameID = strgbldr.toString();
-
+		
 		gameInfo.setGameID(gameID);
-		gameInfo.getGames().put(gameID, null);
+		games.put(gameID,gameInfo);
 		return gameID;
 	}
 
 	public boolean isGameIdValid(String gameID) {
-		if (gameInfo.getGames().containsKey(gameID)) {
-			return true;
-		} else {
-			return false;
-		}
+		return games.containsKey(gameID);
 	}
 
 	public UniquePlayerIdentifier newPlayerCreation(String gameID, PlayerRegistration playerRegistration) {
-		UniquePlayerIdentifier playerID = new UniquePlayerIdentifier();
+		UniquePlayerIdentifier playerID;
 
-		if (isGameIdValid(gameID)) {			
-			playerID = new UniquePlayerIdentifier(UUID.randomUUID().toString());
-			player.setPlayerFirstName(playerRegistration.getStudentFirstName());
-			player.setPlayerLastName(playerRegistration.getStudentLastName());
-			player.setPlayerStudentID(playerRegistration.getStudentID());
-			player.setId(playerID.getUniquePlayerID());
-			gameInfo.getPlayerIdList().add(playerID.getUniquePlayerID());
-			if(gameInfo.getPlayerList().isEmpty()) {
-				player.setYourTurn(true);
+		if (isGameIdValid(gameID)) {
+			if(games.get(gameID).getPlayer1() == null) {
+				playerID = new UniquePlayerIdentifier(UUID.randomUUID().toString());
+				Player player1 = new Player(playerID.getUniquePlayerID());
+				player1.setPlayerFirstName(playerRegistration.getStudentFirstName());
+				player1.setPlayerLastName(playerRegistration.getStudentLastName());
+				player1.setPlayerStudentID(playerRegistration.getStudentID());
+				player1.setYourTurn(false);
+				games.get(gameID).setPlayer1(player1);
+			} else if(games.get(gameID).getPlayer2() == null) {
+				playerID = new UniquePlayerIdentifier(UUID.randomUUID().toString());
+				Player player2 = new Player(playerID.getUniquePlayerID());
+				player2.setPlayerFirstName(playerRegistration.getStudentFirstName());
+				player2.setPlayerLastName(playerRegistration.getStudentLastName());
+				player2.setPlayerStudentID(playerRegistration.getStudentID());
+				player2.setYourTurn(true);
+				games.get(gameID).setPlayer2(player2);
+				System.out.println("Player1: " + games.get(gameID).getPlayer1().getId() + ", Player2: " + games.get(gameID).getPlayer2().getId());
 			} else {
-				player.setYourTurn(false);
+				throw new RuntimeException("Game is full");
 			}
-			gameInfo.getPlayerList().add(player);
-			gameInfo.getGames().put(gameID, gameInfo.getPlayerList());
 		} else {
 			throw new InvalidGameIdException("Name: InvalidGameIdException",
 					"Message: The game ID used during the registration is not exists or not valid anymore!");
 		}
-		
-		
 		return playerID;
 	}
 
 	public boolean isPlayerIdValid(String gameID, String playerID) {
-		return gameInfo.getPlayerIdList().contains(playerID);
+//		System.out.println("GameID: " + gameID + ", PlayerID: " + playerID + ", Player1: " + games.get(gameID).getPlayer1().getId() + ", Player2: " + games.get(gameID).getPlayer2().getId());
+//		System.out.println(games.get(gameID));
+//		System.out.println(games.get(gameID).getActiveplayer().getId());
+		return games.get(gameID).isPlayerValid(playerID);
+		
 	}
 	
 	public GameState setUpGameState(String gameID, String playerID) {
-		List<Player> players = gameInfo.getGames().get(gameID);
 		Collection<PlayerState> playerStateCollection = new ArrayList<>();
-		for(Player player : players) {
-			if(player.isYourTurn()) {
-				PlayerState playerState = new PlayerState(player.getPlayerFirstName(), player.getPlayerLastName(), player.getPlayerStudentID(), EPlayerGameState.ShouldActNext,new UniquePlayerIdentifier(playerID), false);
-				playerStateCollection.add(playerState);
+		Player player1 = games.get(gameID).getPlayer1();
+		if(player1 != null) {
+			System.out.println("Player1 should act next: " + player1.isYourTurn());
+			if(player1.isYourTurn()) {
+				PlayerState playerState1 = new PlayerState(player1.getPlayerFirstName(), player1.getPlayerLastName(), player1.getPlayerStudentID(), EPlayerGameState.ShouldActNext, new UniquePlayerIdentifier(playerID), false);
+				playerStateCollection.add(playerState1);
 			} else {
-				PlayerState playerState = new PlayerState(player.getPlayerFirstName(), player.getPlayerLastName(), player.getPlayerStudentID(), EPlayerGameState.ShouldWait,new UniquePlayerIdentifier(playerID), false);
-				playerStateCollection.add(playerState);
+				PlayerState playerState1 = new PlayerState(player1.getPlayerFirstName(), player1.getPlayerLastName(), player1.getPlayerStudentID(), EPlayerGameState.ShouldWait, new UniquePlayerIdentifier(playerID), false);
+				playerStateCollection.add(playerState1);
 			}
 		}
+		Player player2 = games.get(gameID).getPlayer2();
+		if(player2 != null) {
+			System.out.println("Player2 should act next: " + player2.isYourTurn());
+			if(player2.isYourTurn()) {
+				PlayerState playerState2 = new PlayerState(player2.getPlayerFirstName(), player2.getPlayerLastName(), player2.getPlayerStudentID(), EPlayerGameState.ShouldActNext, new UniquePlayerIdentifier(playerID), false);
+				playerStateCollection.add(playerState2);
+			} else {
+				PlayerState playerState2 = new PlayerState(player2.getPlayerFirstName(), player2.getPlayerLastName(), player2.getPlayerStudentID(), EPlayerGameState.ShouldWait, new UniquePlayerIdentifier(playerID), false);
+				playerStateCollection.add(playerState2);
+			
+			}
+		}
+//		System.out.println(player1.isYourTurn() + "" + player2.isYourTurn());
 		System.out.println(playerStateCollection.size());
-		
 		GameState gameState = new GameState(playerStateCollection, UUID.randomUUID().toString());
 		return gameState;
 	}
-
+	
+	public void togglePlayer(String gameID) {
+		if(games.get(gameID).getPlayer1().isYourTurn()) {
+			games.get(gameID).getPlayer1().setYourTurn(false);
+			games.get(gameID).getPlayer2().setYourTurn(true);
+		} else {
+			games.get(gameID).getPlayer1().setYourTurn(true);
+			games.get(gameID).getPlayer2().setYourTurn(false);
+		}
+	}
+	
+	private void createGameStateId(String gameID) {
+		games.get(gameID).setGameStateID(UUID.randomUUID().toString());
+	}
+	
+	private boolean isMajorChange() {
+		return true;
+	}
+	
 }

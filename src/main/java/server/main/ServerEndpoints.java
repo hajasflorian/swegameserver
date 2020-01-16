@@ -32,7 +32,8 @@ public class ServerEndpoints {
 	@RequestMapping(value = "", method = RequestMethod.GET, produces = MediaType.APPLICATION_XML_VALUE)
 	public @ResponseBody UniqueGameIdentifier newGame() {
 
-		UniqueGameIdentifier gameIdentifier = new UniqueGameIdentifier(serverLogic.newGameCreation(5));
+		UniqueGameIdentifier gameIdentifier = new UniqueGameIdentifier(serverLogic.createNewGame(5));
+		System.out.println("New Game" + gameIdentifier.toString());
 		return gameIdentifier;
 
 	}
@@ -40,9 +41,8 @@ public class ServerEndpoints {
 	@RequestMapping(value = "/{gameID}/players", method = RequestMethod.POST, consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
 	public @ResponseBody ResponseEnvelope<UniquePlayerIdentifier> registerPlayer(@PathVariable String gameID,
 			@Validated @RequestBody PlayerRegistration playerRegistration) {
-
+		System.out.println("Register player " + gameID);
 		if (serverLogic.isGameIdValid(gameID)) {
-//			UniquePlayerIdentifier newPlayerID = new UniquePlayerIdentifier(UUID.randomUUID().toString());
 			UniquePlayerIdentifier newPlayerID = serverLogic.newPlayerCreation(gameID, playerRegistration);
 			ResponseEnvelope<UniquePlayerIdentifier> playerIDMessage = new ResponseEnvelope<>(newPlayerID);
 			return playerIDMessage;
@@ -55,16 +55,16 @@ public class ServerEndpoints {
 	}
 
 	@RequestMapping(value = "/{gameID}/halfmaps", method = RequestMethod.POST, consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
-	public @ResponseBody ResponseEnvelope<?> postHalfMap(@PathVariable String gameID,
-			@Validated @RequestBody HalfMap halfMap) {
-
+	public @ResponseBody ResponseEnvelope<?> postHalfMap(@PathVariable String gameID, @Validated @RequestBody HalfMap halfMap) {
+		System.out.println("Posting halfmap "+ gameID + " " + halfMap.getUniquePlayerID());
 		if (serverLogic.isGameIdValid(gameID)) {
 			if (serverLogic.isPlayerIdValid(gameID, halfMap.getUniquePlayerID())) {
+				serverLogic.togglePlayer(gameID);
 				ResponseEnvelope<?> halfMapResponse = new ResponseEnvelope<>();
 				return halfMapResponse;
 			} else {
 				throw new PlayerIdException("PlayerIdException",
-						"For that game there have been already two players registrered");
+						"Player ID is not valid");
 			}
 		} else {
 			throw new InvalidGameIdException("InvalidGameIdException",
@@ -76,13 +76,14 @@ public class ServerEndpoints {
 	@RequestMapping(value = "/{gameID}/states/{playerID}", method = RequestMethod.GET, produces = MediaType.APPLICATION_XML_VALUE)
 	public @ResponseBody ResponseEnvelope<GameState> getState(@PathVariable String gameID,
 			@PathVariable String playerID) {
+		System.out.println("State for: " + playerID);
 
 		if (serverLogic.isGameIdValid(gameID)) {
 			if (serverLogic.isPlayerIdValid(gameID, playerID)) {
 				return new ResponseEnvelope<>(serverLogic.setUpGameState(gameID, playerID));
 			} else {
 				throw new PlayerIdException("PlayerIdException",
-						"For that game there have been already two players registrered");
+						"Player ID is not valid");
 			}
 		} else {
 			throw new InvalidGameIdException("InvalidGameIdException",

@@ -6,8 +6,12 @@ public class Player {
 	private String firstName;
 	private String lastName;
 	private String studentID;
-	private boolean isYourTurn;
+	private boolean yourTurn;
 	
+	public Player(String id) {
+		this.id = id;
+	}
+		
 	
 	public String getPlayerFirstName() {
 		return firstName;
@@ -28,10 +32,10 @@ public class Player {
 		this.studentID = playerStudentID;
 	}
 	public boolean isYourTurn() {
-		return isYourTurn;
+		return yourTurn;
 	}
 	public void setYourTurn(boolean isYourTurn) {
-		this.isYourTurn = isYourTurn;
+		this.yourTurn = isYourTurn;
 	}
 	public String getId() {
 		return id;
