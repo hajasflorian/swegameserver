@@ -4,10 +4,11 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 
+import MessagesBase.HalfMap;
 import MessagesBase.PlayerRegistration;
 import MessagesBase.UniquePlayerIdentifier;
 import MessagesGameState.EPlayerGameState;
@@ -16,8 +17,6 @@ import MessagesGameState.PlayerState;
 import server.exceptions.InvalidGameIdException;
 
 public class ServerLogic {
-
-//	private ServerGameInformation gameInfo;
 	
 	private Map<String, ServerGameInformation> games = new HashMap<>();
 
@@ -86,28 +85,49 @@ public class ServerLogic {
 		if(player1 != null) {
 			System.out.println("Player1 should act next: " + player1.isYourTurn());
 			if(player1.isYourTurn()) {
-				PlayerState playerState1 = new PlayerState(player1.getPlayerFirstName(), player1.getPlayerLastName(), player1.getPlayerStudentID(), EPlayerGameState.ShouldActNext, new UniquePlayerIdentifier(playerID), false);
-				playerStateCollection.add(playerState1);
+				if(player1.getId().equals(playerID)) {
+					PlayerState playerState1 = new PlayerState(player1.getPlayerFirstName(), player1.getPlayerLastName(), player1.getPlayerStudentID(), EPlayerGameState.ShouldActNext, new UniquePlayerIdentifier(playerID), false);
+					playerStateCollection.add(playerState1);
+				} else {
+					PlayerState playerState1 = new PlayerState(player1.getPlayerFirstName(), player1.getPlayerLastName(), player1.getPlayerStudentID(), EPlayerGameState.ShouldActNext, UniquePlayerIdentifier.random(), false);
+					playerStateCollection.add(playerState1);
+				}
 			} else {
-				PlayerState playerState1 = new PlayerState(player1.getPlayerFirstName(), player1.getPlayerLastName(), player1.getPlayerStudentID(), EPlayerGameState.ShouldWait, new UniquePlayerIdentifier(playerID), false);
-				playerStateCollection.add(playerState1);
+				if(player1.getId().equals(playerID)) {
+					PlayerState playerState1 = new PlayerState(player1.getPlayerFirstName(), player1.getPlayerLastName(), player1.getPlayerStudentID(), EPlayerGameState.ShouldWait, new UniquePlayerIdentifier(playerID), false);
+					playerStateCollection.add(playerState1);
+				} else {
+					PlayerState playerState1 = new PlayerState(player1.getPlayerFirstName(), player1.getPlayerLastName(), player1.getPlayerStudentID(), EPlayerGameState.ShouldWait, UniquePlayerIdentifier.random(), false);
+					playerStateCollection.add(playerState1);
+				}
 			}
 		}
 		Player player2 = games.get(gameID).getPlayer2();
 		if(player2 != null) {
 			System.out.println("Player2 should act next: " + player2.isYourTurn());
 			if(player2.isYourTurn()) {
-				PlayerState playerState2 = new PlayerState(player2.getPlayerFirstName(), player2.getPlayerLastName(), player2.getPlayerStudentID(), EPlayerGameState.ShouldActNext, new UniquePlayerIdentifier(playerID), false);
-				playerStateCollection.add(playerState2);
+				if(player2.getId().equals(playerID)) {
+					PlayerState playerState2 = new PlayerState(player2.getPlayerFirstName(), player2.getPlayerLastName(), player2.getPlayerStudentID(), EPlayerGameState.ShouldActNext, new UniquePlayerIdentifier(playerID), false);
+					playerStateCollection.add(playerState2);
+				} else {
+					PlayerState playerState2 = new PlayerState(player2.getPlayerFirstName(), player2.getPlayerLastName(), player2.getPlayerStudentID(), EPlayerGameState.ShouldActNext, UniquePlayerIdentifier.random(), false);
+					playerStateCollection.add(playerState2);
+				}
 			} else {
-				PlayerState playerState2 = new PlayerState(player2.getPlayerFirstName(), player2.getPlayerLastName(), player2.getPlayerStudentID(), EPlayerGameState.ShouldWait, new UniquePlayerIdentifier(playerID), false);
-				playerStateCollection.add(playerState2);
-			
+				if(player2.getId().equals(playerID)) {
+					PlayerState playerState2 = new PlayerState(player2.getPlayerFirstName(), player2.getPlayerLastName(), player2.getPlayerStudentID(), EPlayerGameState.ShouldWait, new UniquePlayerIdentifier(playerID), false);
+					playerStateCollection.add(playerState2);
+				} else {
+					PlayerState playerState2 = new PlayerState(player2.getPlayerFirstName(), player2.getPlayerLastName(), player2.getPlayerStudentID(), EPlayerGameState.ShouldWait, UniquePlayerIdentifier.random(), false);
+					playerStateCollection.add(playerState2);
+				}
 			}
 		}
+		
 //		System.out.println(player1.isYourTurn() + "" + player2.isYourTurn());
 		System.out.println(playerStateCollection.size());
-		GameState gameState = new GameState(playerStateCollection, UUID.randomUUID().toString());
+		
+		GameState gameState = new GameState(playerStateCollection, games.get(gameID).getGameStateID());
 		return gameState;
 	}
 	
@@ -121,11 +141,12 @@ public class ServerLogic {
 		}
 	}
 	
-	private void createGameStateId(String gameID) {
+	public void createGameStateId(String gameID) {
 		games.get(gameID).setGameStateID(UUID.randomUUID().toString());
 	}
 	
-	private boolean isMajorChange() {
+	public boolean isMapValid(HalfMap halfmap) {
+		if(halfmap.getNodes().size()
 		return true;
 	}
 	

@@ -45,6 +45,7 @@ public class ServerEndpoints {
 		if (serverLogic.isGameIdValid(gameID)) {
 			UniquePlayerIdentifier newPlayerID = serverLogic.newPlayerCreation(gameID, playerRegistration);
 			ResponseEnvelope<UniquePlayerIdentifier> playerIDMessage = new ResponseEnvelope<>(newPlayerID);
+			serverLogic.createGameStateId(gameID);
 			return playerIDMessage;
 
 		} else {
@@ -59,7 +60,9 @@ public class ServerEndpoints {
 		System.out.println("Posting halfmap "+ gameID + " " + halfMap.getUniquePlayerID());
 		if (serverLogic.isGameIdValid(gameID)) {
 			if (serverLogic.isPlayerIdValid(gameID, halfMap.getUniquePlayerID())) {
+				if(serverLogic.isMapValid(halfMap))
 				serverLogic.togglePlayer(gameID);
+				serverLogic.createGameStateId(gameID);
 				ResponseEnvelope<?> halfMapResponse = new ResponseEnvelope<>();
 				return halfMapResponse;
 			} else {

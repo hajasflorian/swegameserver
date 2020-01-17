@@ -1,10 +1,10 @@
 package server.logic;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import map.Point;
+import map.TerrainType;
 
 public class ServerGameInformation {
 	
@@ -13,9 +13,8 @@ public class ServerGameInformation {
 	private Player player2;
 	private String gameStateID;
 	private boolean majorChange;
-
-//	private Map<String, List<Player>> games = new HashMap<String, List<Player>>();
-
+	private HashMap<Point, TerrainType> map;
+	
 	public String getGameID() {
 		return gameID;
 	}
@@ -23,19 +22,6 @@ public class ServerGameInformation {
 	public void setGameID(String gameID) {
 		this.gameID = gameID;
 	}
-
-
-//	public  void setGames(Map<String, List<Player>> games) {
-//		this.games = games;
-//	}
-	
-//	public List<Player> getPlayerList() {
-//		return playerList;
-//	}
-//
-//	public void setPlayerList(List<Player> playerList) {
-//		this.playerList = playerList;
-//	}
 	
 	public Player getPlayer(List<Player> playerList, String playerId) {
 		for(int i=0; i<playerList.size();i++) {
@@ -48,8 +34,6 @@ public class ServerGameInformation {
 	}
 
 	public boolean isPlayerValid(String playerId) {
-//		if(player1 != null && playerId.equals(player1.getId()) && player1.isYourTurn()) return true;
-//		if(player2 != null && playerId.equals(player2.getId()) && player2.isYourTurn()) return true;
 		if((player1 != null && playerId.equals(player1.getId()) || (player2 != null && playerId.equals(player2.getId())))) return true;
 		return false;
 	}
@@ -91,13 +75,5 @@ public class ServerGameInformation {
 	public void setMajorChange(boolean majorChange) {
 		this.majorChange = majorChange;
 	}
-
-//	public List<Player> getPlayerlist() {
-//		return playerlist;
-//	}
-//
-//	public void setPlayerlist(List<Player> playerlist) {
-//		this.playerlist = playerlist;
-//	}
 
 }
