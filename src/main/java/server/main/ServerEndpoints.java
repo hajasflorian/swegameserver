@@ -61,13 +61,14 @@ public class ServerEndpoints {
 		System.out.println("Posting halfmap "+ gameID + " " + halfMap.getUniquePlayerID());
 		if (serverLogic.isGameIdValid(gameID)) {
 			if (serverLogic.isPlayerIdValid(gameID, halfMap.getUniquePlayerID())) {
-				if(serverLogic.isMapValid(gameID, halfMap)) {
+				try {	
+					serverLogic.isMapValid(gameID, halfMap);
 					serverLogic.togglePlayer(gameID);
 					serverLogic.createGameStateId(gameID);
 					ResponseEnvelope<?> halfMapResponse = new ResponseEnvelope<>();
 					return halfMapResponse;
-				} else {
-					throw new MapIsNotValidException("MapIsNotValidException", "Map is not valid!");
+				} catch(MapIsNotValidException m) {
+					throw m;
 				}
 			} else {
 				throw new PlayerIdException("PlayerIdException",
