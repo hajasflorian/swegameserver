@@ -13,7 +13,13 @@ public class ServerGameInformation {
 	private Player player2;
 	private String gameStateID;
 	private boolean majorChange;
-	private HashMap<Point, TerrainType> map;
+	private HashMap<Point, TerrainType> halfMap1;
+	private HashMap<Point, TerrainType> halfMap2;
+	private Point player1Position;
+	private Point player2Position;
+	private Point player1FortPostion;
+	private Point player2FortPostion;
+	private HashMap<Point, TerrainType> fullMap;
 	
 	public String getGameID() {
 		return gameID;
@@ -30,7 +36,6 @@ public class ServerGameInformation {
 			}
 		}
 		return null;
-		
 	}
 
 	public boolean isPlayerValid(String playerId) {
@@ -74,6 +79,62 @@ public class ServerGameInformation {
 
 	public void setMajorChange(boolean majorChange) {
 		this.majorChange = majorChange;
+	}
+
+	public HashMap<Point, TerrainType> getHalfMap1() {
+		return halfMap1;
+	}
+
+	public void setHalfMap1(HashMap<Point, TerrainType> map) {
+		this.halfMap1 = map;
+	}
+
+	public HashMap<Point, TerrainType> getHalfMap2() {
+		return halfMap2;
+	}
+
+	public void setHalfMap2(HashMap<Point, TerrainType> halfMap2) {
+		this.halfMap2 = halfMap2;
+	}
+
+	public HashMap<Point, TerrainType> getFullMap() {
+		return fullMap;
+	}
+
+	public void setFullMap(HashMap<Point, TerrainType> fullMap) {
+		this.fullMap = fullMap;
+	}
+
+	public Point getPlayer1Position() {
+		return player1Position;
+	}
+
+	public void setPlayer1Position(Point player1Position) {
+		this.player1Position = player1Position;
+	}
+
+	public Point getPlayer2Position() {
+		return player2Position;
+	}
+
+	public void setPlayer2Position(Point player2Position) {
+		this.player2Position = player2Position;
+	}
+
+	public Point getPlayer1FortPostion() {
+		return player1FortPostion;
+	}
+
+	public void setPlayer1FortPostion(Point player1FortPostion) {
+		this.player1FortPostion = player1FortPostion;
+	}
+
+	public Point getPlayer2FortPostion() {
+		return player2FortPostion;
+	}
+
+	public void setPlayer2FortPostion(Point player2FortPostion) {
+		this.player2FortPostion = player2FortPostion;
 	}
 
 }

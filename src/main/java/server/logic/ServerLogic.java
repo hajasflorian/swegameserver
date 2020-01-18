@@ -4,16 +4,28 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 
+import MessagesBase.ETerrain;
 import MessagesBase.HalfMap;
+import MessagesBase.HalfMapNode;
 import MessagesBase.PlayerRegistration;
 import MessagesBase.UniquePlayerIdentifier;
+import MessagesGameState.EFortState;
 import MessagesGameState.EPlayerGameState;
+import MessagesGameState.EPlayerPositionState;
+import MessagesGameState.ETreasureState;
+import MessagesGameState.FullMap;
+import MessagesGameState.FullMapNode;
 import MessagesGameState.GameState;
 import MessagesGameState.PlayerState;
+import map.Point;
+import map.TerrainType;
 import server.exceptions.InvalidGameIdException;
 
 public class ServerLogic {
@@ -123,11 +135,19 @@ public class ServerLogic {
 				}
 			}
 		}
+		HashMap<Point, TerrainType> map = games.get(gameID).getFullMap();
+//		System.out.println("FullMap size: " + map.size());
+		GameState gameState = null;
+		if(map != null) {
+			Optional<FullMap> fullMap = convertToFullMap(gameID, playerID, map);
+			gameState = new GameState(fullMap ,playerStateCollection, games.get(gameID).getGameStateID());
+		} else {
+			gameState = new GameState(playerStateCollection, games.get(gameID).getGameStateID());
+		}
 		
 //		System.out.println(player1.isYourTurn() + "" + player2.isYourTurn());
 		System.out.println(playerStateCollection.size());
 		
-		GameState gameState = new GameState(playerStateCollection, games.get(gameID).getGameStateID());
 		return gameState;
 	}
 	
@@ -145,9 +165,124 @@ public class ServerLogic {
 		games.get(gameID).setGameStateID(UUID.randomUUID().toString());
 	}
 	
-	public boolean isMapValid(HalfMap halfmap) {
-		if(halfmap.getNodes().size()
-		return true;
+	public boolean isMapValid(String gameID, HalfMap halfMap) {
+		if(halfMap.getNodes().size() == 32) {
+			HashMap<Point, TerrainType> hashMap = convertToHalfMap(halfMap);
+			HashMap<Point, TerrainType> halfMap1 = games.get(gameID).getHalfMap1();
+			if(halfMap1 == null) {
+				games.get(gameID).setHalfMap1(hashMap);
+				hashMap.forEach((k,v) -> {
+					if(k.getFortPresent()) games.get(gameID).setPlayer1Position(k);
+				});
+				games.get(gameID).setFullMap(hashMap);
+			} else {
+				games.get(gameID).setHalfMap2(hashMap);
+				hashMap.forEach((k,v) -> {
+					if(k.getFortPresent()) games.get(gameID).setPlayer2Position(k);
+				});
+				combineMap(gameID);
+			}
+			return true;
+		}
+		return false;
 	}
 	
+	private HashMap<Point, TerrainType> convertToHalfMap(HalfMap halfMap) {
+		HashMap<Point, TerrainType> halfHashMap = new HashMap<>();
+		Collection<HalfMapNode> halfMapNodes = halfMap.getNodes();
+		Iterator<HalfMapNode> it = halfMapNodes.iterator();
+		if(it.hasNext()) {
+			HalfMapNode node = halfMapNodes.iterator().next();
+			Point point = new Point(node.getX(), node.getY(), node.isFortPresent());
+			if(node.getTerrain().equals(ETerrain.Grass)) {
+				halfHashMap.put(point, TerrainType.Grass);
+			} else if (node.getTerrain().equals(ETerrain.Mountain)) {
+				halfHashMap.put(point, TerrainType.Mountain);
+			} else {
+				halfHashMap.put(point, TerrainType.Water);
+			}
+		}
+		return halfHashMap;
+	}
+	
+	private Optional<FullMap> convertToFullMap(String gameID, String playerID, HashMap<Point, TerrainType> fullMap) {
+		Collection<FullMapNode> fullMapNodes = new ArrayList<FullMapNode>();
+		System.out.println("Size of the fullmap: " +  fullMap.size());
+		if(fullMap.entrySet().iterator().hasNext()) {
+			Entry<Point, TerrainType> set = fullMap.entrySet().iterator().next();
+			Point p = set.getKey();
+			if(playerID.equals(games.get(gameID).getPlayer1().getId())) {
+				if(set.getValue().equals(TerrainType.Grass)) {
+						if(p.equals(games.get(gameID).getPlayer1Position())) {
+							FullMapNode node = new FullMapNode(ETerrain.Grass, EPlayerPositionState.MyPosition, ETreasureState.NoOrUnknownTreasureState, EFortState.MyFortPresent, p.getX(), p.getY());
+							fullMapNodes.add(node);
+						} else {
+							FullMapNode node = new FullMapNode(ETerrain.Grass, EPlayerPositionState.NoPlayerPresent, ETreasureState.NoOrUnknownTreasureState, EFortState.NoOrUnknownFortState, p.getX(), p.getY());
+							fullMapNodes.add(node);
+						}
+				} else if(set.getValue().equals(TerrainType.Mountain)) {
+					if(p.equals(games.get(gameID).getPlayer1Position())) {
+						FullMapNode node = new FullMapNode(ETerrain.Mountain, EPlayerPositionState.MyPosition, ETreasureState.NoOrUnknownTreasureState, EFortState.MyFortPresent, p.getX(), p.getY());
+						fullMapNodes.add(node);
+					} else {
+						FullMapNode node = new FullMapNode(ETerrain.Mountain, EPlayerPositionState.NoPlayerPresent, ETreasureState.NoOrUnknownTreasureState, EFortState.NoOrUnknownFortState, p.getX(), p.getY());
+						fullMapNodes.add(node);
+					}
+				} else {
+					if(p.equals(games.get(gameID).getPlayer1Position())) {
+						FullMapNode node = new FullMapNode(ETerrain.Water, EPlayerPositionState.MyPosition, ETreasureState.NoOrUnknownTreasureState, EFortState.MyFortPresent, p.getX(), p.getY());
+						fullMapNodes.add(node);
+					} else {
+						FullMapNode node = new FullMapNode(ETerrain.Water, EPlayerPositionState.NoPlayerPresent, ETreasureState.NoOrUnknownTreasureState, EFortState.NoOrUnknownFortState, p.getX(), p.getY());
+						fullMapNodes.add(node);
+					}
+				}
+			} else if(set.getValue().equals(TerrainType.Grass)) {
+				if(p.equals(games.get(gameID).getPlayer1Position())) {
+					FullMapNode node = new FullMapNode(ETerrain.Grass, EPlayerPositionState.MyPosition, ETreasureState.NoOrUnknownTreasureState, EFortState.MyFortPresent, p.getX(), p.getY());
+					fullMapNodes.add(node);
+				} else {
+					FullMapNode node = new FullMapNode(ETerrain.Grass, EPlayerPositionState.NoPlayerPresent, ETreasureState.NoOrUnknownTreasureState, EFortState.NoOrUnknownFortState, p.getX(), p.getY());
+					fullMapNodes.add(node);
+				}
+			} else {
+				
+			}
+		}
+		Optional<FullMap> resultfullMap = Optional.of(new FullMap(fullMapNodes));
+		return resultfullMap;
+	}
+	
+	private boolean toCombineMapVertical( ) {
+		Random rnd = new Random();
+		int number = rnd.nextInt(2);
+		if(number == 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	00 01 02 03
+	10 11 12 13
+	
+	
+	public void combineMap(String gameID) {
+		HashMap<Point, TerrainType> halfMap2= games.get(gameID).getHalfMap2();
+		HashMap<Point, TerrainType> fullMap= games.get(gameID).getFullMap();
+		//TODO combine map is now default
+		if(toCombineMapVertical()) {
+			//TODO add y +8
+			halfMap2.forEach((k, v) -> {
+				System.out.println("X: " + k.getX() + ", Y: " + k.getY());
+				fullMap.put(k, v);
+			});
+		} else {
+			//TODO add x +4
+			halfMap2.forEach((k, v) -> {
+				System.out.println("X: " + k.getX() + ", Y: " + k.getY());
+				fullMap.put(k, v);
+			});
+		}
+	}
 }
